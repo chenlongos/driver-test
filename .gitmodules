@@ -1,0 +1,4 @@
+[submodule ".arceos"]
+	path = .arceos
+	url = https://github.com/chenlongos/appd.git
+	branch = phytium-pi

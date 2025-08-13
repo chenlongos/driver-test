@@ -1,0 +1,5 @@
+*.bin
+*.out
+*.elf
+target/
+.marscode/
