@@ -1,5 +1,7 @@
 *.bin
 *.out
 *.elf
+*.log
 target/
 .marscode/
+__pycache__/
