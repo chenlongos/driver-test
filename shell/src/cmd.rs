@@ -2,6 +2,8 @@ use std::fs::{self, File, FileType};
 use std::io::{self, prelude::*};
 use std::{string::String, vec::Vec};
 
+use axhal::misc::UART2;
+
 #[cfg(all(not(feature = "axstd"), unix))]
 use std::os::unix::fs::{FileTypeExt, PermissionsExt};
 
@@ -27,6 +29,8 @@ const CMD_TABLE: &[(&str, CmdHandler)] = &[
     ("pwd", do_pwd),
     ("rm", do_rm),
     ("uname", do_uname),
+    ("uart_set_baud", do_uart_set_baud),
+    ("uart_test", do_uart_test),
 ];
 
 fn file_type_to_char(ty: FileType) -> char {
@@ -270,6 +274,30 @@ fn do_help(_args: &str) {
 fn do_exit(_args: &str) {
     println!("Bye~");
     std::process::exit(0);
+}
+
+fn do_uart_set_baud(args: &str) {
+    let baud = args.parse::<u32>().unwrap();
+    let mut uart = UART2.lock();
+    uart.init_no_irq(100_000_000, baud);
+}
+
+fn do_uart_test(_args: &str) {
+    let mut uart = UART2.lock();
+    let mut data = Vec::new();
+    loop {
+        let read = uart.read_byte_poll();
+        if read == 0x0 {
+            break;
+        }
+        println!("arceos receive : {}", read as char);
+        data.push(read);
+    }
+    println!("receive terminated, start send.");
+    for &byte in data.iter() {
+        uart.put_byte_poll(byte);
+        println!("arceos send : {}", byte as char);
+    }
 }
 
 pub fn run_cmd(line: &[u8]) {

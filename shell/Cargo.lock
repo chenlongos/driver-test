@@ -26,6 +26,7 @@ version = "0.1.0"
 dependencies = [
  "axfs_ramfs",
  "axfs_vfs",
+ "axhal",
  "axstd",
  "crate_interface",
 ]
