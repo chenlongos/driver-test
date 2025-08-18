@@ -8,6 +8,7 @@ Arceos driver test
 
 ```sh
 git clone --recursive https://github.com/shzhxh/driver-test.git
+cd driver-test
 make build  # 生成的测试镜像在shell目录下
 ```
 #### 目标板上运行测试镜像
@@ -24,14 +25,18 @@ go 0x90100000
 
 #### 测试板上发起测试
 
+被测试板的调试串口和测试串口都要连接在测试板上。
+
 ```sh
 # 安装测试依赖
+git clone https://github.com/shzhxh/driver-test.git
+cd driver-test
 python3 -m venv ~/.venv
 source ~/.venv/bin/activate
-pip3 install ./scripts/requests.txt
+pip3 install -r ./scripts/requests.txt
 deactivate
 
-# 运行测试
+# 运行测试。注：要修改scripts/目录下的py文件里的配置，使与实际情况相符。
 source ~/.venv/bin/activate
 pytest -m uart # 日志记录在pytest-uart.log
 deactivate
