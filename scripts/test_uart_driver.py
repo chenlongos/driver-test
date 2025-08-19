@@ -7,79 +7,21 @@ import logging
 from typing import List, Dict, Tuple
 
 # 测试配置
-DEBUG_UART_PORT = "/dev/ttyUSB0"  # 调试串口，波特率固定
 TEST_UART_PORT = "/dev/ttyUSB1"   # 被测串口，波特率可设置
-DEBUG_BAUDRATE = 115200            # 调试串口固定波特率
 DEFAULT_BAUDRATE = 115200          # 被测串口默认波特率
 TEST_BAUDRATES = [9600, 19200, 38400, 57600, 230400]
 TEST_CHAR_COUNT = 10
 STOP_CHAR = b'\x00'  # 停止发送的字符
 
-class DebugUART:
-    """调试串口管理器，保持长期连接"""
-    _instance = None
-    
-    def __new__(cls, port: str, baudrate: int):
-        if cls._instance is None:
-            cls._instance = super().__new__(cls)
-            cls._instance.port = port
-            cls._instance.baudrate = baudrate
-            cls._instance.ser = None
-        return cls._instance
-    
-    def connect(self) -> bool:
-        """建立调试串口连接"""
-        if self.ser and self.ser.is_open:
-            return True
-        
-        try:
-            self.ser = serial.Serial(
-                port=self.port,
-                baudrate=self.baudrate,
-                timeout=2,
-                parity=serial.PARITY_NONE,
-                stopbits=serial.STOPBITS_ONE,
-                bytesize=serial.EIGHTBITS
-            )
-            return self.ser.is_open
-        except Exception as e:
-            print(f"调试串口连接失败: {str(e)}")
-            return False
-    
-    def disconnect(self) -> None:
-        """断开调试串口连接"""
-        if self.ser and self.ser.is_open:
-            self.ser.close()
-    
-    def send_command(self, command: str) -> bool:
-        """发送命令到开发板"""
-        if not self.ser or not self.ser.is_open:
-            return False
-        
-        try:
-            self.ser.write(f"{command}\r\n".encode())
-            time.sleep(0.5)  # 等待命令执行
-            return True
-        except Exception as e:
-            print(f"发送命令失败: {str(e)}")
-            return False
-
-
 class UART_Tester:
-    def __init__(self, test_port: str, test_baudrate: int = DEFAULT_BAUDRATE):
-        self.test_port = test_port
-        self.test_baudrate = test_baudrate
-        self.test_ser = None
-        self.debug_uart = DebugUART(DEBUG_UART_PORT, DEBUG_BAUDRATE)
-        self.test_results = {
-            "total": 0,
-            "passed": 0,
-            "failed": 0,
-            "details": []
-        }
+    def __init__(self, debug_uart):
         self.logger = logging.getLogger('UART_Tester')
+        self.test_result = False 
+        self.debug_uart = debug_uart
+        self.test_ser = None
+        self.test_port = TEST_UART_PORT
+        self.test_baudrate = DEFAULT_BAUDRATE
 
-    
     def connect_test_port(self) -> bool:
         """仅连接被测串口"""
         if self.test_ser and self.test_ser.is_open:
@@ -190,56 +132,17 @@ class UART_Tester:
             if not success:
                 self.logger.error(f"数据不匹配 - 发送: {sent_bytes!r}, 接收: {received_bytes!r}")
             if success:
-                return True, "测试成功", sent_bytes, received_bytes
+                return True, "测试成功"
             else:
-                return False, f"数据不匹配 - 发送: {sent_bytes!r}, 接收: {received_bytes!r}", sent_bytes, received_bytes
+                return False, f"数据不匹配 - 发送: {sent_bytes!r}, 接收: {received_bytes!r}"
                 
         except Exception as e:
             return False, f"测试过程出错: {str(e)}", test_data, b""
     
-    def record_result(self, test_name: str, success: bool, message: str) -> None:
-        """记录测试结果"""
-        self.test_results["total"] += 1
-        if success:
-            self.test_results["passed"] += 1
-        else:
-            self.test_results["failed"] += 1
-        
-        self.test_results["details"].append({
-            "test": test_name,
-            "status": "PASS" if success else "FAIL",
-            "message": message
-        })
-    
-    def print_summary(self) -> None:
-        """打印测试汇总结果"""
-        print("\n" + "="*50)
-        print("测试汇总结果")
-        print("="*50)
-        print(f"总测试数: {self.test_results['total']}")
-        print(f"通过: {self.test_results['passed']}")
-        print(f"失败: {self.test_results['failed']}")
-        print("\n详细结果:")
-        for detail in self.test_results["details"]:
-            print(f"- {detail['test']}: {detail['status']} - {detail['message']}")
-        print("="*50 + "\n")
-
-
-@pytest.fixture(scope="session")
-def debug_uart():
-    """调试串口 fixture，作用域为整个测试会话"""
-    debug_uart = DebugUART(DEBUG_UART_PORT, DEBUG_BAUDRATE)
-    if debug_uart.connect():
-        yield debug_uart
-        debug_uart.disconnect()
-    else:
-        pytest.fail("无法连接到调试串口，请检查配置")
-
-
 @pytest.fixture(scope="module")
 def uart_tester(debug_uart):
     """创建UART测试器 fixture"""
-    tester = UART_Tester(TEST_UART_PORT)
+    tester = UART_Tester(debug_uart)
     yield tester
     tester.disconnect_test_port()
 
@@ -254,12 +157,7 @@ def ensure_test_port_connected(uart_tester):
 @pytest.mark.uart
 def test_uart_default_baudrate(uart_tester):
     """测试默认波特率下的UART功能"""
-    success, msg, sent, received = uart_tester.run_uart_test(DEFAULT_BAUDRATE)
-    uart_tester.record_result(
-        f"UART测试 (波特率: {DEFAULT_BAUDRATE})", 
-        success, 
-        f"{msg} - 发送: {sent}, 接收: {received}"
-    )
+    success, msg = uart_tester.run_uart_test(DEFAULT_BAUDRATE)
     assert success, msg
 
 
@@ -271,29 +169,6 @@ def test_uart_different_baudrates(uart_tester, baudrate):
     if baudrate == DEFAULT_BAUDRATE:
         pytest.skip("默认波特率已在单独测试中覆盖")
     
-    success, msg, sent, received = uart_tester.run_uart_test(baudrate)
-    uart_tester.record_result(
-        f"UART测试 (波特率: {baudrate})", 
-        success, 
-        f"{msg} - 发送: {sent}, 接收: {received}"
-    )
+    success, msg = uart_tester.run_uart_test(baudrate)
     assert success, msg
 
-
-def pytest_sessionfinish(session, exitstatus):
-    """测试会话结束时执行，打印汇总结果"""
-    # 获取测试器实例并打印汇总
-    for item in session.items:
-        if hasattr(item._request, 'fixturenames') and 'uart_tester' in item._request.fixturenames:
-            tester = item._request.getfixturevalue('uart_tester')
-            tester.print_summary()
-            break
-
-
-# 命令行执行入口
-if __name__ == "__main__":
-    import sys
-    # 允许通过命令行参数指定测试类型
-    # 例如: pytest -m uart 只运行UART测试
-    #      pytest -m "not i2c" 运行除了I2C之外的所有测试
-    pytest.main(sys.argv)

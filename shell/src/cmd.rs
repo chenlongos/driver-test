@@ -1,8 +1,9 @@
+use core::ptr::NonNull;
 use std::fs::{self, File, FileType};
 use std::io::{self, prelude::*};
 use std::{string::String, vec::Vec};
 
-use axhal::misc::UART2;
+use axhal::misc::*;
 
 #[cfg(all(not(feature = "axstd"), unix))]
 use std::os::unix::fs::{FileTypeExt, PermissionsExt};
@@ -31,6 +32,17 @@ const CMD_TABLE: &[(&str, CmdHandler)] = &[
     ("uname", do_uname),
     ("uart_set_baud", do_uart_set_baud),
     ("uart_test", do_uart_test),
+    ("gpio_init", do_gpio_init),
+    ("pwm_init", do_pwm_init),
+    ("tacho_init", do_tacho_init),
+    ("watchdog_init", do_watchdog_init),
+    ("i2c_init", do_i2c_init),
+    ("spi_init", do_spi_init),
+    ("gic_init", do_gic_init),
+    ("fxmac_init", do_fxmac_init),
+    ("pcie_init", do_pcie_init),
+    ("pinmux_init", do_pinmux_init),
+    ("ixgeb_init", do_ixgeb_init),
 ];
 
 fn file_type_to_char(ty: FileType) -> char {
@@ -298,6 +310,58 @@ fn do_uart_test(_args: &str) {
         uart.put_byte_poll(byte);
         println!("arceos send : {}", byte as char);
     }
+}
+
+fn do_pwm_init(_args: &str) {
+    println!("todo: pwm init");
+    // const PWM_CTRL_BASE : usize = 0x2804a000;
+    // let pwm_va = unsafe { NonNull::new_unchecked(PWM_CTRL_BASE as *mut u8)};
+    // let mut pwm = PwmCtrl::new(pwm_va);
+    // pwm.init();
+}
+
+fn do_tacho_init(_args: &str) {
+    println!("todo: tacho init");
+    // const TACHO_CTRL_BASE : usize = 0x28054000;
+    // let tacho_va = unsafe { NonNull::new_unchecked(TACHO_CTRL_BASE as *mut u8)};
+    // let mut tacho = Tacho::new(tacho_va);
+    // tacho.init();
+}
+
+fn do_i2c_init(_args: &str) {
+    unsafe { oled_init(); }
+}
+
+fn do_gpio_init(_args: &str) {
+    println!("todo: gpio init");
+}
+
+fn do_pinmux_init(_args: &str) {
+    println!("todo: pinmux init");
+}
+
+fn do_spi_init(_args: &str) {
+    println!("todo: spi init");
+}
+
+fn do_watchdog_init(_args: &str) {
+    println!("todo: watchdog init");
+}
+
+fn do_gic_init(_args: &str) {
+    println!("todo: gic init");
+}
+
+fn do_fxmac_init(_args: &str) {
+    println!("todo: fxmac init");
+}
+
+fn do_pcie_init(_args: &str) {
+    println!("todo: pcie init");
+}
+
+fn do_ixgeb_init(_args: &str) {
+    println!("todo: ixgeb init");
 }
 
 pub fn run_cmd(line: &[u8]) {
