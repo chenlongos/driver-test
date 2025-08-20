@@ -3,5 +3,6 @@
 *.elf
 *.log
 target/
+output/
 .marscode/
 __pycache__/

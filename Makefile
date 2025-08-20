@@ -5,3 +5,4 @@ build:
 
 clean:
 	make -C .arceos A=$(PWD)/shell clean
+	rm -rf output/
