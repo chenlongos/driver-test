@@ -38,6 +38,7 @@ const CMD_TABLE: &[(&str, CmdHandler)] = &[
     ("watchdog_init", do_watchdog_init),
     ("i2c_init", do_i2c_init),
     ("spi_init", do_spi_init),
+    ("spi_test", do_spi_test),
     ("gic_init", do_gic_init),
     ("fxmac_init", do_fxmac_init),
     ("pcie_init", do_pcie_init),
@@ -342,7 +343,21 @@ fn do_pinmux_init(_args: &str) {
 }
 
 fn do_spi_init(_args: &str) {
-    println!("todo: spi init");
+    println!("spi init OK.");
+}
+
+fn do_spi_test(_args: &str) {
+    let mut spi = SPI0.lock();
+    for data in [0x61, 0x62, 0x63, 0x64] {
+        spi.send(data);
+        let received = spi.recv();
+
+        if received != data {
+            println!("spi test failed, expected: 0x{:02x}, received: 0x{:02x}", data, received);
+            return;
+        } 
+    }
+    println!("spi test OK.");
 }
 
 fn do_watchdog_init(_args: &str) {

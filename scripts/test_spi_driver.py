@@ -15,6 +15,14 @@ class SPITester:
         self.logger.info(f"测试结果: {'PASSED' if self.test_result else 'FAILED'}")
         return self.test_result
 
+    def run_spi_functional_test(self):
+        """执行 SPI 功能测试"""
+        self.logger.info("开始 SPI 功能测试...")
+        response = self.debug_uart.send_command("spi_test")
+        self.test_result = "OK" in response
+        self.logger.info(f"测试结果: {'PASSED' if self.test_result else 'FAILED'}")
+        return self.test_result
+
 @pytest.fixture(scope="module")
 def spi_tester(debug_uart):
     """SPI 测试 fixture"""
@@ -25,3 +33,7 @@ def spi_tester(debug_uart):
 @pytest.mark.spi
 def test_spi_initialization(spi_tester):
     assert spi_tester.run_spi_test(), "SPI 初始化失败"
+
+@pytest.mark.spi
+def test_spi_functionality(spi_tester):
+    assert spi_tester.run_spi_functional_test(), "SPI 功能测试失败"
