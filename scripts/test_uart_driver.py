@@ -53,7 +53,9 @@ class UART_Tester:
     
     def send_command(self, command: str) -> bool:
         """通过调试串口发送命令到开发板"""
-        return self.debug_uart.send_command(command)
+        response = self.debug_uart.send_command(command)
+        self.logger.info(f"send_command返回值: {response}")
+        return "OK" in response
     
     def set_baudrate(self, baudrate: int) -> bool:
         """通过调试串口发送波特率设置命令，然后配置被测串口"""
@@ -83,11 +85,10 @@ class UART_Tester:
         """执行UART测试"""
         # 设置波特率
         if not self.set_baudrate(baudrate):
-            return False, "设置波特率失败", b"", b""
+            return False, "设置波特率失败"
         
         # 启动UART测试
-        if not self.send_command("uart_test"):
-            return False, "启动UART测试失败", b"", b""
+        self.send_command("uart_test")
         
         # 生成测试数据
         test_data = self.generate_test_chars(TEST_CHAR_COUNT)

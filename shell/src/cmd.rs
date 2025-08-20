@@ -292,6 +292,7 @@ fn do_uart_set_baud(args: &str) {
     let baud = args.parse::<u32>().unwrap();
     let mut uart = UART2.lock();
     uart.init_no_irq(100_000_000, baud);
+    println!("set uart baud OK, baud: {}", baud);
 }
 
 fn do_uart_test(_args: &str) {

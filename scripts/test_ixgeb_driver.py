@@ -11,7 +11,7 @@ class TestIxgebDriver:
         # 发送IXGEB初始化命令
         self.logger.info("Sending ixgeb_init command")
         response = debug_uart.send_command("ixgeb_init")
-        self.test_result = response
+        self.test_result = "OK" in response
         assert self.test_result, "IXGEB driver initialization failed"
 
     def teardown_method(self):

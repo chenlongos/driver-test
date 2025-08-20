@@ -11,7 +11,7 @@ class TestGicDriver:
         # 发送GIC初始化命令
         self.logger.info("Sending gic_init command")
         response = debug_uart.send_command("gic_init")
-        self.test_result = response
+        self.test_result = "OK" in response
         assert self.test_result, "GIC driver initialization failed"
 
     def teardown_method(self):

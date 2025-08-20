@@ -11,7 +11,7 @@ class TestFxmacDriver:
         # 发送FXMAC初始化命令
         self.logger.info("Sending fxmac_init command")
         response = debug_uart.send_command("fxmac_init")
-        self.test_result = response
+        self.test_result = "OK" in response
         assert self.test_result, "FXMAC driver initialization failed"
 
     def teardown_method(self):

@@ -11,7 +11,7 @@ class TestPinmuxDriver:
         # 发送Pinmux初始化命令
         self.logger.info("Sending pinmux_init command")
         response = debug_uart.send_command("pinmux_init")
-        self.test_result = response
+        self.test_result = "OK" in response
         assert self.test_result, "Pinmux driver initialization failed"
 
     def teardown_method(self):

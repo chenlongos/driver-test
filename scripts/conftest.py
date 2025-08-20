@@ -38,18 +38,21 @@ class DebugUART:
         if self.ser and self.ser.is_open:
             self.ser.close()
     
-    def send_command(self, command: str) -> bool:
+    def send_command(self, command: str) -> str:
         """发送命令到开发板"""
         if not self.ser or not self.ser.is_open:
-            return False
+            return "调试串口未连接"
         
         try:
             self.ser.write(f"{command}\r\n".encode())
             time.sleep(0.5)  # 等待命令执行
-            return True
+            # 读取响应
+            response = self.ser.read_all().decode().strip()
+            if not response:
+                return "未收到响应"
+            return response
         except Exception as e:
-            print(f"发送命令失败: {str(e)}")
-            return False
+            return f"发送命令失败: {str(e)}"
 
 @pytest.fixture(scope="session")
 def debug_uart():

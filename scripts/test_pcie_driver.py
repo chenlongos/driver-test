@@ -11,7 +11,7 @@ class TestPcieDriver:
         # 发送PCIe初始化命令
         self.logger.info("Sending pcie_init command")
         response = debug_uart.send_command("pcie_init")
-        self.test_result = response
+        self.test_result = "OK" in response
         assert self.test_result, "PCIe driver initialization failed"
 
     def teardown_method(self):

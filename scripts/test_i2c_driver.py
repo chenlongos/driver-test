@@ -11,7 +11,7 @@ class I2CTester:
         """执行 I2C 初始化测试"""
         self.logger.info("开始 I2C 初始化测试...")
         response = self.debug_uart.send_command("i2c_init")
-        self.test_result = response
+        self.test_result = "OK" in response
         self.logger.info(f"测试结果: {'PASSED' if self.test_result else 'FAILED'}")
         return self.test_result
 
