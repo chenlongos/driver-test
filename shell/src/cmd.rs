@@ -3,6 +3,7 @@ use std::fs::{self, File, FileType};
 use std::io::{self, prelude::*};
 use std::{string::String, vec::Vec};
 
+use axhal::mem::phys_to_virt;
 use axhal::misc::*;
 
 #[cfg(all(not(feature = "axstd"), unix))]
@@ -33,8 +34,9 @@ const CMD_TABLE: &[(&str, CmdHandler)] = &[
     ("uart_set_baud", do_uart_set_baud),
     ("uart_test", do_uart_test),
     ("gpio_init", do_gpio_init),
+    ("gpio_test", do_gpio_test),
     ("pwm_init", do_pwm_init),
-    ("tacho_init", do_tacho_init),
+    ("timer_tacho_test", do_timer_tacho_test),
     ("watchdog_init", do_watchdog_init),
     ("i2c_init", do_i2c_init),
     ("spi_init", do_spi_init),
@@ -322,12 +324,19 @@ fn do_pwm_init(_args: &str) {
     // pwm.init();
 }
 
-fn do_tacho_init(_args: &str) {
-    println!("todo: tacho init");
-    // const TACHO_CTRL_BASE : usize = 0x28054000;
-    // let tacho_va = unsafe { NonNull::new_unchecked(TACHO_CTRL_BASE as *mut u8)};
-    // let mut tacho = Tacho::new(tacho_va);
-    // tacho.init();
+fn do_timer_tacho_test(_args: &str) {
+    let mut tacho = Tacho::new(NonNull::new(phys_to_virt(0x2805_6000).as_usize() as _));
+    tacho.init();
+
+    for i in 0..10 {
+        if let Some(res) = tacho.get_result() {
+            meter = res;
+            println!("res = {res}");
+            break;
+        }
+        axstd::thread::sleep(time::Duration::from_millis(50));
+    }
+    println!("timer test OK.");
 }
 
 fn do_i2c_init(_args: &str) {
@@ -335,7 +344,20 @@ fn do_i2c_init(_args: &str) {
 }
 
 fn do_gpio_init(_args: &str) {
-    println!("todo: gpio init");
+    println!("gpio init OK.");
+}
+
+fn do_gpio_test(_args: &str) {
+    let mut gpio0 = GPIO0.lock();
+    let p = gpio::GpioPins::p8;
+    gpio0.set_pin_dir(p, true);
+    for i in 0..10{
+        sleep(time::Duration::from_millis(1000));
+        gpio0.set_pin_data(p, data);
+        println!("current data: {data}");
+        data = !data;
+    }
+    println!("gpio test OK.");
 }
 
 fn do_pinmux_init(_args: &str) {
@@ -361,7 +383,13 @@ fn do_spi_test(_args: &str) {
 }
 
 fn do_watchdog_init(_args: &str) {
-    println!("todo: watchdog init");
+    println!("watchdog init OK.");
+}
+
+fn do_watchdog_test(_args: &str) {
+    let mut watchdog0 = WDT0.lock();
+    watchdog0.set_timeout(1);
+    watchdog0.start();
 }
 
 fn do_gic_init(_args: &str) {

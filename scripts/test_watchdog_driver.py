@@ -15,6 +15,14 @@ class WatchdogTester:
         self.logger.info(f"测试结果: {'PASSED' if self.test_result else 'FAILED'}")
         return self.test_result
 
+    def run_watchdog_functional_test(self):
+        """执行 Watchdog 功能测试"""
+        self.logger.info("开始 Watchdog 功能测试...")
+        response = self.debug_uart.send_command("watchdog_test")
+        self.test_result = "Bye" in response
+        self.logger.info(f"测试结果: {'PASSED' if self.test_result else 'FAILED'}")
+        return self.test_result
+
 @pytest.fixture(scope="module")
 def watchdog_tester(debug_uart):
     """Watchdog 测试 fixture"""
@@ -25,3 +33,8 @@ def watchdog_tester(debug_uart):
 @pytest.mark.watchdog
 def test_watchdog_initialization(watchdog_tester):
     assert watchdog_tester.run_watchdog_test(), "Watchdog 初始化失败"
+
+@pytest.mark.watchdog
+@pytest.mark.reset
+def test_watchdog_functionality(watchdog_tester):
+    assert watchdog_tester.run_watchdog_functional_test(), "Watchdog 功能测试失败"
