@@ -328,15 +328,26 @@ fn do_timer_tacho_test(_args: &str) {
     let mut tacho = Tacho::new(NonNull::new(phys_to_virt(0x2805_6000).as_usize() as _));
     tacho.init();
 
-    for i in 0..10 {
+    let mut initial_value_set = false; 
+    let mut meter = 0; 
+    for i in 0..100 {
         if let Some(res) = tacho.get_result() {
-            meter = res;
-            println!("res = {res}");
-            break;
+            if !initial_value_set {
+                meter = res;
+                initial_value_set = true;
+                println!("Initial res = {res}");
+            } else {
+                println!("res = {res}");
+                if res != meter {
+                    println!("Timer test OK.");
+                    return;
+                }
+                // 如果相等则什么都不做
+            }
         }
-        axstd::thread::sleep(time::Duration::from_millis(50));
+    axstd::thread::sleep(time::Duration::from_millis(50));
     }
-    println!("timer test OK.");
+    println!("timer test failed.");
 }
 
 fn do_i2c_init(_args: &str) {
@@ -357,7 +368,6 @@ fn do_gpio_test(_args: &str) {
         println!("current data: {data}");
         data = !data;
     }
-    println!("gpio test OK.");
 }
 
 fn do_pinmux_init(_args: &str) {
