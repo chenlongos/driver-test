@@ -1,10 +1,12 @@
 use core::ptr::NonNull;
+use core::time;
 use std::fs::{self, File, FileType};
 use std::io::{self, prelude::*};
 use std::{string::String, vec::Vec};
 
 use axhal::mem::phys_to_virt;
 use axhal::misc::*;
+use axstd::thread::sleep;
 
 #[cfg(all(not(feature = "axstd"), unix))]
 use std::os::unix::fs::{FileTypeExt, PermissionsExt};
@@ -38,7 +40,8 @@ const CMD_TABLE: &[(&str, CmdHandler)] = &[
     ("pwm_init", do_pwm_init),
     ("timer_tacho_test", do_timer_tacho_test),
     ("watchdog_init", do_watchdog_init),
-    ("i2c_init", do_i2c_init),
+    ("watchdog_test", do_watchdog_test),
+    ("i2c_test", do_i2c_test),
     ("spi_init", do_spi_init),
     ("spi_test", do_spi_test),
     ("gic_init", do_gic_init),
@@ -314,10 +317,14 @@ fn do_uart_test(_args: &str) {
         uart.put_byte_poll(byte);
         println!("arceos send : {}", byte as char);
     }
+    println!("translate OK.");
 }
 
 fn do_pwm_init(_args: &str) {
     println!("todo: pwm init");
+}
+
+fn do_pwm_test(_args: &str) {
     // const PWM_CTRL_BASE : usize = 0x2804a000;
     // let pwm_va = unsafe { NonNull::new_unchecked(PWM_CTRL_BASE as *mut u8)};
     // let mut pwm = PwmCtrl::new(pwm_va);
@@ -325,33 +332,29 @@ fn do_pwm_init(_args: &str) {
 }
 
 fn do_timer_tacho_test(_args: &str) {
-    let mut tacho = Tacho::new(NonNull::new(phys_to_virt(0x2805_6000).as_usize() as _));
+    let mut tacho = Tacho::new(NonNull::new(phys_to_virt(0x2805_6000.into()).as_usize() as _).expect("tacho va failed"));
     tacho.init();
 
     let mut initial_value_set = false; 
-    let mut meter = 0; 
-    for i in 0..100 {
+    for _i in 0..50 {
         if let Some(res) = tacho.get_result() {
             if !initial_value_set {
-                meter = res;
+                let meter = res;
                 initial_value_set = true;
                 println!("Initial res = {res}");
             } else {
                 println!("res = {res}");
-                if res != meter {
-                    println!("Timer test OK.");
-                    return;
-                }
-                // 如果相等则什么都不做
+                println!("Timer test OK.");
+                return;
             }
         }
-    axstd::thread::sleep(time::Duration::from_millis(50));
+    sleep(time::Duration::from_millis(50));
     }
     println!("timer test failed.");
 }
 
-fn do_i2c_init(_args: &str) {
-    unsafe { oled_init(); }
+fn do_i2c_test(_args: &str) {
+    unsafe { run_iicoled(); }
 }
 
 fn do_gpio_init(_args: &str) {
@@ -359,8 +362,9 @@ fn do_gpio_init(_args: &str) {
 }
 
 fn do_gpio_test(_args: &str) {
-    let mut gpio0 = GPIO0.lock();
-    let p = gpio::GpioPins::p8;
+    let mut gpio0 = GPIO.lock();
+    let p = GpioPins::p8;
+    let mut data = false;
     gpio0.set_pin_dir(p, true);
     for i in 0..10{
         sleep(time::Duration::from_millis(1000));

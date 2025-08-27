@@ -44,13 +44,34 @@ class DebugUART:
             return "调试串口未连接"
         
         try:
+            self.ser.flushInput()  # 清除之前残留的未读取数据
+            
             self.ser.write(f"{command}\r\n".encode())
-            time.sleep(0.5)  # 等待命令执行
-            # 读取响应
-            response = self.ser.read_all().decode().strip()
-            if not response:
-                return "未收到响应"
-            return response
+            start_time = time.time()
+            timeout = 10  # 最大响应时间设置为10秒
+            response = ""
+            
+            while time.time() - start_time < timeout:
+                if self.ser.in_waiting > 0:
+                    data = self.ser.read(self.ser.in_waiting).decode()
+                    response += data
+                    if "arceos:" in response:
+                        response = response.split("arceos:")[0]
+                        break
+                time.sleep(0.01)
+            
+            # 超时处理
+            if time.time() - start_time >= timeout:
+                if response:
+                    # 如果已有部分响应，返回截止符之前的内容
+                    if "arceos:" in response:
+                        response = response.split("arceos:")[0]
+                    else:
+                        response += "(超时，未找到完整响应)"
+                else:
+                    response = "超时10秒，未收到响应"
+            
+            return response.strip()
         except Exception as e:
             return f"发送命令失败: {str(e)}"
 

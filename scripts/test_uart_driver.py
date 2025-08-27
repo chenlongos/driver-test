@@ -51,16 +51,12 @@ class UART_Tester:
             self.test_ser.close()
             self.test_ser = None
     
-    def send_command(self, command: str) -> bool:
-        """通过调试串口发送命令到开发板"""
-        response = self.debug_uart.send_command(command)
-        self.logger.info(f"send_command返回值: {response}")
-        return "OK" in response
-    
     def set_baudrate(self, baudrate: int) -> bool:
         """通过调试串口发送波特率设置命令，然后配置被测串口"""
         self.logger.info(f"设置被测串口波特率为: {baudrate}")
-        success = self.send_command(f"uart_set_baud {baudrate}")
+        response = self.debug_uart.send_command(f"uart_set_baud {baudrate}")
+        self.logger.info(f"设置波特率命令发送响应: {response}")
+        success = "OK" in response
         
         if not success:
             self.logger.error(f"设置波特率命令发送失败: {baudrate}")
@@ -86,15 +82,14 @@ class UART_Tester:
         # 设置波特率
         if not self.set_baudrate(baudrate):
             return False, "设置波特率失败"
-        
-        # 启动UART测试
-        self.send_command("uart_test")
-        
+       
         # 生成测试数据
         test_data = self.generate_test_chars(TEST_CHAR_COUNT)
         self.logger.info(f"向测试串口发送数据: {test_data} ")
-        start_time = time.time()
-        
+
+        # 启动UART测试
+        self.debug_uart.send_command("uart_test")
+
         # 发送测试数据
         try:
             # 逐字符发送测试数据
@@ -118,8 +113,6 @@ class UART_Tester:
                     break
                 response_data.append(char[0])
                 time.sleep(0.01)  # 短暂延迟
-            end_time = time.time()
-            duration = end_time - start_time
             # 将字节列表转换为字符串
             received_str = ''.join([chr(b) for b in response_data])
             self.logger.info(f"从测试串口接收数据: {received_str}")
