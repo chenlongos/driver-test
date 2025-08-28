@@ -35,6 +35,8 @@ const CMD_TABLE: &[(&str, CmdHandler)] = &[
     ("uname", do_uname),
     ("uart_set_baud", do_uart_set_baud),
     ("uart_test", do_uart_test),
+    ("clock_init", do_clock_init),
+    ("clock_test", do_clock_test),
     ("gpio_init", do_gpio_init),
     ("gpio_test", do_gpio_test),
     ("pwm_init", do_pwm_init),
@@ -319,6 +321,27 @@ fn do_uart_test(_args: &str) {
         println!("arceos send : {}", byte as char);
     }
     println!("translate OK.");
+}
+
+fn do_clock_init(_args: &str) {
+    if FClockInit(&mut CLOCK.lock(), &FClockLookupConfig(0).unwrap()) {
+        println!("clock init OK.");
+    } else {
+        println!("clock inited OK.");
+    }
+}
+
+fn do_clock_test(args: &str) {
+    let freq = args.parse::<u32>().unwrap();
+    if !FClockSetFreq(&mut CLOCK.lock(), freq) {
+        println!("clock set freq failed.");
+        return;
+    }
+    if freq == FClockGetFreq(&mut CLOCK.lock()) {
+        println!("clock test OK.");
+    } else {
+        println!("clock test failed.");
+    }
 }
 
 fn do_pwm_init(_args: &str) {
