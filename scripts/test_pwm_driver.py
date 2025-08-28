@@ -14,6 +14,14 @@ class PWMTester:
         self.test_result = "OK" in response
         self.logger.info(f"测试结果: {'PASSED' if self.test_result else 'FAILED'}")
         return self.test_result
+    
+    def run_pwm_functional_test(self):
+        """执行 PWM 测试"""
+        self.logger.info("开始 PWM 测试...")
+        response = self.debug_uart.send_command("pwm_test")
+        self.test_result = "OK" in response
+        self.logger.info(f"测试结果: {'PASSED' if self.test_result else 'FAILED'}")
+        return self.test_result
 
 @pytest.fixture(scope="module")
 def pwm_tester(debug_uart):
@@ -25,3 +33,7 @@ def pwm_tester(debug_uart):
 @pytest.mark.pwm
 def test_pwm_initialization(pwm_tester):
     assert pwm_tester.run_pwm_test(), "PWM 初始化失败"
+
+@pytest.mark.pwm
+def test_pwm_functional(pwm_tester):
+    assert pwm_tester.run_pwm_functional_test(), "PWM 功能测试失败"

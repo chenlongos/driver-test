@@ -45,12 +45,15 @@ const CMD_TABLE: &[(&str, CmdHandler)] = &[
     ("watchdog_init", do_watchdog_init),
     ("watchdog_test", do_watchdog_test),
     ("i2c_test", do_i2c_test),
+    ("mio_init", do_mio_init),
+    ("mio_test", do_mio_test),
+    ("cru_init", do_cru_init),
+    ("cru_test", do_cru_test),
     ("spi_init", do_spi_init),
     ("spi_test", do_spi_test),
     ("gic_init", do_gic_init),
     ("fxmac_init", do_fxmac_init),
     ("pcie_init", do_pcie_init),
-    ("pinmux_init", do_pinmux_init),
     ("ixgeb_init", do_ixgeb_init),
 ];
 
@@ -389,6 +392,38 @@ fn do_i2c_test(_args: &str) {
     unsafe { run_iicoled(); }
 }
 
+fn do_mio_init(_args: &str) {
+    if FIOPadCfgInitialize(&mut PAD.lock(), &FIOPadLookupConfig(0).unwrap()) {
+        println!("mio init OK.") 
+    } else {
+        println!("mio inited OK.");
+    }
+}
+
+fn do_mio_test(_args: &str) {
+    if FMioFuncInit(&mut MIO2.lock(), 1) {
+        println!("mio test OK.");
+    } else {
+        println!("mio test failed.");
+    }
+}
+
+fn do_cru_init(_args: &str) {
+    if FResetInit(&mut CRU.lock(), &FResetLookupConfig(0).unwrap()) {
+        println!("cru init OK.");
+    } else {
+        println!("cru inited OK.");
+    }
+}
+
+fn do_cru_test(_args: &str) {
+    if FResetPeripheral(&mut CRU.lock(), 1) {
+        println!("cru test OK.");
+    } else {
+        println!("cru test failed.");
+    }
+}
+
 fn do_gpio_init(_args: &str) {
     println!("gpio init OK.");
 }
@@ -404,10 +439,6 @@ fn do_gpio_test(_args: &str) {
         println!("current data: {data}");
         data = !data;
     }
-}
-
-fn do_pinmux_init(_args: &str) {
-    println!("todo: pinmux init");
 }
 
 fn do_spi_init(_args: &str) {
