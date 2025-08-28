@@ -44,8 +44,7 @@ class DebugUART:
             return "调试串口未连接"
         
         try:
-            self.ser.flushInput()  # 清除之前残留的未读取数据
-            
+            self.ser.flushInput()
             self.ser.write(f"{command}\r\n".encode())
             start_time = time.time()
             timeout = 10  # 最大响应时间设置为10秒

@@ -38,6 +38,7 @@ const CMD_TABLE: &[(&str, CmdHandler)] = &[
     ("gpio_init", do_gpio_init),
     ("gpio_test", do_gpio_test),
     ("pwm_init", do_pwm_init),
+    ("pwm_test", do_pwm_test),
     ("timer_tacho_test", do_timer_tacho_test),
     ("watchdog_init", do_watchdog_init),
     ("watchdog_test", do_watchdog_test),
@@ -321,14 +322,22 @@ fn do_uart_test(_args: &str) {
 }
 
 fn do_pwm_init(_args: &str) {
-    println!("todo: pwm init");
+    if let Some(pwm) = PwmCtrl::global() {
+    println!("pwm init OK.");
+    } else {
+        println!("pwm init failed.");
+    }
 }
 
 fn do_pwm_test(_args: &str) {
-    // const PWM_CTRL_BASE : usize = 0x2804a000;
-    // let pwm_va = unsafe { NonNull::new_unchecked(PWM_CTRL_BASE as *mut u8)};
-    // let mut pwm = PwmCtrl::new(pwm_va);
-    // pwm.init();
+    // 获取全局PWM控制器并执行测试
+    if let Some(pwm) = PwmCtrl::global() {
+        pwm.init();
+        pwm.change_duty(50);
+        println!("pwm test OK.");
+    } else {
+        println!("pwm test failed.");
+    }
 }
 
 fn do_timer_tacho_test(_args: &str) {
