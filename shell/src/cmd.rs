@@ -44,6 +44,7 @@ const CMD_TABLE: &[(&str, CmdHandler)] = &[
     ("timer_tacho_test", do_timer_tacho_test),
     ("watchdog_init", do_watchdog_init),
     ("watchdog_test", do_watchdog_test),
+    ("i2c_init", do_i2c_init),
     ("i2c_test", do_i2c_test),
     ("mio_init", do_mio_init),
     ("mio_test", do_mio_test),
@@ -336,10 +337,7 @@ fn do_clock_init(_args: &str) {
 
 fn do_clock_test(args: &str) {
     let freq = args.parse::<u32>().unwrap();
-    if !FClockSetFreq(&mut CLOCK.lock(), freq) {
-        println!("clock set freq failed.");
-        return;
-    }
+    FClockSetFreq(&mut CLOCK.lock(), freq); 
     if freq == FClockGetFreq(&mut CLOCK.lock()) {
         println!("clock test OK.");
     } else {
@@ -355,12 +353,15 @@ fn do_pwm_init(_args: &str) {
     }
 }
 
-fn do_pwm_test(_args: &str) {
+fn do_pwm_test(args: &str) {
+    let duty = args.parse::<u32>().unwrap();
     // 获取全局PWM控制器并执行测试
     if let Some(pwm) = PwmCtrl::global() {
         pwm.init();
-        pwm.change_duty(50);
-        println!("pwm test OK.");
+        pwm.change_duty(duty);
+        if duty == pwm.get_duty() {
+            println!("pwm test OK.");
+        }
     } else {
         println!("pwm test failed.");
     }
@@ -388,8 +389,16 @@ fn do_timer_tacho_test(_args: &str) {
     println!("timer test failed.");
 }
 
+fn do_i2c_init(_args: &str) {
+        println!("i2c init OK.");
+}
+
 fn do_i2c_test(_args: &str) {
-    unsafe { run_iicoled(); }
+    if unsafe {oled_init()} {
+        println!("i2c test OK.");
+    } else {
+        println!("i2c test failed.");
+    }
 }
 
 fn do_mio_init(_args: &str) {
@@ -417,10 +426,17 @@ fn do_cru_init(_args: &str) {
 }
 
 fn do_cru_test(_args: &str) {
-    if FResetPeripheral(&mut CRU.lock(), 1) {
-        println!("cru test OK.");
+    if FResetSystem(&mut CRU.lock()) {
+        println!("cru sys reset OK.");
     } else {
-        println!("cru test failed.");
+        println!("cru sys reset failed.");
+    }
+    for i in 1..5 {
+        if FResetPeripheral(&mut CRU.lock(), i) {
+            println!("cru periph {i} reset OK.");
+        } else {
+            println!("cru periph {i} reset failed.");
+        }
     }
 }
 

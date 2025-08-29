@@ -15,12 +15,16 @@ class PWMTester:
         self.logger.info(f"测试结果: {'PASSED' if self.test_result else 'FAILED'}")
         return self.test_result
     
-    def run_pwm_functional_test(self):
-        """执行 PWM 测试"""
-        self.logger.info("开始 PWM 测试...")
-        response = self.debug_uart.send_command("pwm_test")
+    def run_pwm_functional_test(self, duty_cycle):
+        """执行带占空比参数的PWM测试"""
+        if not (1 <= duty_cycle <= 100):
+            self.logger.error(f"占空比{ duty_cycle }超出范围(1~100)")
+            return False
+        
+        self.logger.info(f"开始PWM占空比{ duty_cycle }%测试...")
+        response = self.debug_uart.send_command(f"pwm_test { duty_cycle }")
         self.test_result = "OK" in response
-        self.logger.info(f"测试结果: {'PASSED' if self.test_result else 'FAILED'}")
+        self.logger.info(f"占空比{ duty_cycle }%测试结果: {'PASSED' if self.test_result else 'FAILED'}")
         return self.test_result
 
 @pytest.fixture(scope="module")
@@ -36,4 +40,10 @@ def test_pwm_initialization(pwm_tester):
 
 @pytest.mark.pwm
 def test_pwm_functional(pwm_tester):
-    assert pwm_tester.run_pwm_functional_test(), "PWM 功能测试失败"
+    assert pwm_tester.run_pwm_functional_test(50), "PWM默认占空比测试失败"
+
+@pytest.mark.parametrize("duty_cycle", [1, 25, 50, 75, 100])
+@pytest.mark.pwm
+def test_pwm_duty_cycle_variations(pwm_tester, duty_cycle):
+    assert pwm_tester.run_pwm_functional_test(duty_cycle), \
+        f"PWM占空比{duty_cycle}%测试失败"

@@ -39,5 +39,6 @@ deactivate
 # 运行测试。注：要修改scripts/目录下的py文件里的配置，使与实际情况相符。
 source ~/.venv/bin/activate
 pytest -m uart # 日志记录在pytest-uart.log
+pytest -s -m gpio # 注：gpio测试需要加-s选项
 deactivate
 ```

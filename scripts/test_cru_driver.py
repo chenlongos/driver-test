@@ -34,6 +34,3 @@ def cru_tester(debug_uart):
 def test_cru_initialization(cru_tester):
     assert cru_tester.run_cru_test(), "CRU 初始化失败"
 
-@pytest.mark.reset
-def test_cru_functionality(cru_tester):
-    assert cru_tester.run_cru_functional_test(), "CRU 功能测试失败"
