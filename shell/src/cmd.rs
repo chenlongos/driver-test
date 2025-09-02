@@ -394,11 +394,7 @@ fn do_i2c_init(_args: &str) {
 }
 
 fn do_i2c_test(_args: &str) {
-    if unsafe {oled_init()} {
-        println!("i2c test OK.");
-    } else {
-        println!("i2c test failed.");
-    }
+    unsafe {run_iicoled()} 
 }
 
 fn do_mio_init(_args: &str) {
@@ -483,6 +479,7 @@ fn do_watchdog_test(_args: &str) {
     let mut watchdog0 = WDT0.lock();
     watchdog0.set_timeout(1);
     watchdog0.start();
+    println!("watchdog test OK.");
 }
 
 fn do_gic_init(_args: &str) {

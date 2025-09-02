@@ -26,8 +26,6 @@ class GPIOTester:
         # 执行命令
         self.debug_uart.send_command("gpio_test")
         
-        time.sleep(10)
-        
         # 获取用户输入的字符串作为response
         response = input("如观察到调试灯闪烁，请输入OK，否则直接按entry键: ")
         
