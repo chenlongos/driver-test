@@ -346,7 +346,7 @@ fn do_clock_test(args: &str) {
 }
 
 fn do_pwm_init(_args: &str) {
-    if let Some(pwm) = PwmCtrl::global() {
+    if let Some(_pwm) = PwmCtrl::global() {
     println!("pwm init OK.");
     } else {
         println!("pwm init failed.");
@@ -358,7 +358,7 @@ fn do_pwm_test(args: &str) {
     // 获取全局PWM控制器并执行测试
     if let Some(pwm) = PwmCtrl::global() {
         pwm.init();
-        pwm.change_duty(duty);
+        let _ = pwm.change_duty(duty);
         if duty == pwm.get_duty() {
             println!("pwm test OK.");
         }
@@ -375,7 +375,6 @@ fn do_timer_tacho_test(_args: &str) {
     for _i in 0..50 {
         if let Some(res) = tacho.get_result() {
             if !initial_value_set {
-                let meter = res;
                 initial_value_set = true;
                 println!("Initial res = {res}");
             } else {
@@ -394,7 +393,7 @@ fn do_i2c_init(_args: &str) {
 }
 
 fn do_i2c_test(_args: &str) {
-    unsafe {run_iicoled()} 
+    run_iicoled();
 }
 
 fn do_mio_init(_args: &str) {
@@ -445,7 +444,7 @@ fn do_gpio_test(_args: &str) {
     let p = GpioPins::p8;
     let mut data = false;
     gpio0.set_pin_dir(p, true);
-    for i in 0..10{
+    for _i in 0..10{
         sleep(time::Duration::from_millis(1000));
         gpio0.set_pin_data(p, data);
         println!("current data: {data}");

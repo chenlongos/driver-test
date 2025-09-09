@@ -1,5 +1,6 @@
 import pytest
 import logging
+import time
 
 class WatchdogTester:
     def __init__(self, debug_uart):
@@ -21,6 +22,7 @@ class WatchdogTester:
         response = self.debug_uart.send_command("watchdog_test")
         self.test_result = "OK" in response
         self.logger.info(f"测试结果: {'PASSED' if self.test_result else 'FAILED'}")
+        time.sleep(10)
         return self.test_result
 
 @pytest.fixture(scope="module")
