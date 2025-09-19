@@ -460,6 +460,7 @@ fn do_spi_test(_args: &str) {
     let mut spi = SPI0.lock();
     for data in [0x61, 0x62, 0x63, 0x64] {
         spi.send(data);
+        sleep(time::Duration::from_millis(10));
         let received = spi.recv();
 
         if received != data {
